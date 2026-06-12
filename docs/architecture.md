@@ -103,3 +103,49 @@ SQLite database
 | GET | `/api/job-titles` | Distinct job titles |
 
 Interactive API docs: `/docs` (Swagger UI).
+
+## Salary Band Logic
+
+For each `(country, job_title)` group:
+
+1. Collect all salaries in that group
+2. Compute **p25** and **p75** using inclusive quartiles
+3. Classify each employee:
+   - `below_band` — salary < p25
+   - `within_band` — p25 ≤ salary ≤ p75
+   - `above_band` — salary > p75
+
+Returned on `GET /api/employees` as `salary_band`. Shown as colored badges in the React employee table.
+
+## Frontend Structure
+
+```
+src/
+├── api/client.ts
+├── components/
+│   ├── EmployeeTable.tsx      # Table + salary band badges
+│   ├── EmployeeForm.tsx
+│   └── InsightsDashboard.tsx
+├── pages/
+│   ├── EmployeesPage.tsx
+│   └── InsightsPage.tsx
+└── App.tsx
+```
+
+## Test Strategy
+
+- **Backend:** pytest + in-memory SQLite; 20 integration tests covering CRUD, insights, CSV, salary bands
+- **Frontend:** Vitest + RTL for form schema and table rendering
+
+## Related Docs
+
+- [requirements.md](requirements.md) — scope and data model
+- [tradeoffs.md](tradeoffs.md) — decision rationale
+- [seed-performance.md](seed-performance.md) — bulk insert benchmarks
+- [ai-prompts.md](ai-prompts.md) — Cursor prompt log
+
+## Deployment (Manual)
+
+1. **Backend:** `uvicorn app.main:app --host 0.0.0.0 --port 8000`
+2. **Frontend (dev):** `npm run dev`
+3. **Production:** `npm run build` → serve `frontend/dist` via FastAPI static mount or separate host

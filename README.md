@@ -102,3 +102,72 @@ Org summary:
 ```bash
 curl http://localhost:8000/api/insights/summary
 ```
+
+Salary distribution by country:
+
+```bash
+curl http://localhost:8000/api/insights/salary-distribution/United%20States
+```
+
+Top earners:
+
+```bash
+curl "http://localhost:8000/api/insights/top-earners?country=United%20States&limit=5"
+```
+
+Export employees as CSV:
+
+```bash
+curl -o employees.csv http://localhost:8000/api/employees/export/csv
+```
+
+## Architecture
+
+- **Backend:** FastAPI + SQLAlchemy + SQLite with layered architecture (routers → services → models).
+- **Frontend:** React + TypeScript + Vite + shadcn/ui + Tailwind CSS.
+- **Tests:** pytest (backend), Vitest + React Testing Library (frontend).
+
+See [docs/architecture.md](docs/architecture.md), [docs/requirements.md](docs/requirements.md), [docs/tradeoffs.md](docs/tradeoffs.md), [docs/seed-performance.md](docs/seed-performance.md), and [docs/ai-prompts.md](docs/ai-prompts.md) for details.
+
+## Production Deployment (Manual)
+
+### Option A — Separate processes
+
+1. Deploy backend with `uvicorn app.main:app --host 0.0.0.0 --port 8000`.
+2. Build frontend: `cd frontend && npm run build`.
+3. Serve `frontend/dist` with any static host (nginx, S3, etc.).
+4. Set `VITE_API_URL` to your backend URL before building.
+
+### Option B — Single process (FastAPI serves frontend)
+
+1. `cd frontend && npm run build`
+2. Start backend — if `frontend/dist` exists, FastAPI automatically serves the SPA.
+
+Set environment variables from `.env.example`:
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | SQLAlchemy database URL |
+| `CORS_ORIGINS` | Comma-separated allowed origins |
+| `VITE_API_URL` | Backend URL for frontend build |
+
+## Seed Script
+
+```bash
+cd backend
+python seed/seed.py --count 10000
+```
+
+- Default: 100 employees
+- Idempotent: skips if data already exists
+- Uses bulk inserts for performance
+
+## Project Structure
+
+```
+salary-management/
+├── backend/          # FastAPI application
+├── frontend/         # React application
+├── docs/             # Requirements and architecture
+└── README.md
+```

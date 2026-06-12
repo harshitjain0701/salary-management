@@ -1,11 +1,16 @@
+import csv
+import io
 import uuid
+from collections.abc import Generator
 from datetime import datetime, timezone
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models import Employee
-from app.schemas import EmployeeCreate, EmployeeUpdate
+from app.schemas import EmployeeCreate, EmployeeListItem, EmployeeRead, EmployeeUpdate
+from app.services import insights_service
+from app.services.salary_utils import classify_salary_band
 
 
 def create_employee(db: Session, payload: EmployeeCreate) -> Employee:
@@ -26,15 +31,13 @@ def get_employee(db: Session, employee_id: str) -> Employee | None:
     return db.query(Employee).filter(Employee.id == employee_id).first()
 
 
-def list_employees(
+def _build_filtered_query(
     db: Session,
     *,
-    page: int = 1,
-    page_size: int = 25,
     country: str | None = None,
     job_title: str | None = None,
     search: str | None = None,
-) -> tuple[list[Employee], int]:
+):
     query = db.query(Employee)
 
     if country:
@@ -44,14 +47,88 @@ def list_employees(
     if search:
         query = query.filter(Employee.full_name.ilike(f"%{search}%"))
 
+    return query
+
+
+def list_employees(
+    db: Session,
+    *,
+    page: int = 1,
+    page_size: int = 25,
+    country: str | None = None,
+    job_title: str | None = None,
+    search: str | None = None,
+) -> tuple[list[EmployeeListItem], int]:
+    query = _build_filtered_query(db, country=country, job_title=job_title, search=search)
+
     total = query.with_entities(func.count(Employee.id)).scalar() or 0
-    items = (
+    employees = (
         query.order_by(Employee.full_name)
         .offset((page - 1) * page_size)
         .limit(page_size)
         .all()
     )
+
+    percentile_map = insights_service.get_job_title_percentile_map(db)
+    items: list[EmployeeListItem] = []
+
+    for employee in employees:
+        p25, p75 = percentile_map.get((employee.country, employee.job_title), (employee.salary, employee.salary))
+        salary_band = classify_salary_band(employee.salary, p25, p75).value
+        base = EmployeeRead.model_validate(employee)
+        items.append(EmployeeListItem(**base.model_dump(), salary_band=salary_band))
+
     return items, total
+
+
+def iter_employees_csv(
+    db: Session,
+    *,
+    country: str | None = None,
+    job_title: str | None = None,
+    search: str | None = None,
+) -> Generator[str, None, None]:
+    query = _build_filtered_query(db, country=country, job_title=job_title, search=search)
+    employees = query.order_by(Employee.full_name).all()
+
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(
+        [
+            "id",
+            "full_name",
+            "job_title",
+            "department",
+            "country",
+            "currency",
+            "salary",
+            "employment_type",
+            "created_at",
+            "updated_at",
+        ]
+    )
+    yield buffer.getvalue()
+    buffer.seek(0)
+    buffer.truncate(0)
+
+    for employee in employees:
+        writer.writerow(
+            [
+                employee.id,
+                employee.full_name,
+                employee.job_title,
+                employee.department,
+                employee.country,
+                employee.currency,
+                employee.salary,
+                employee.employment_type.value,
+                employee.created_at.isoformat(),
+                employee.updated_at.isoformat(),
+            ]
+        )
+        yield buffer.getvalue()
+        buffer.seek(0)
+        buffer.truncate(0)
 
 
 def update_employee(db: Session, employee: Employee, payload: EmployeeUpdate) -> Employee:

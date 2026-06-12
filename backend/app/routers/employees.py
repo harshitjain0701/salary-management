@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -30,6 +31,26 @@ def list_employees(
         total=total,
         page=page,
         page_size=page_size,
+    )
+
+
+@router.get("/employees/export/csv")
+def export_employees_csv(
+    country: str | None = None,
+    job_title: str | None = None,
+    search: str | None = None,
+    db: Session = Depends(get_db),
+):
+    filename = "employees.csv"
+    return StreamingResponse(
+        employee_service.iter_employees_csv(
+            db,
+            country=country,
+            job_title=job_title,
+            search=search,
+        ),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

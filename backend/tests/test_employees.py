@@ -90,3 +90,29 @@ def test_delete_employee(client, valid_employee_payload):
 
     get_response = client.get(f"/api/employees/{employee_id}")
     assert get_response.status_code == 404
+
+
+def test_list_employees_includes_salary_band(client, valid_employee_payload):
+    client.post("/api/employees", json={**valid_employee_payload, "full_name": "Low Earner", "salary": 70000.0})
+    client.post("/api/employees", json={**valid_employee_payload, "full_name": "Mid Earner", "salary": 100000.0})
+    client.post("/api/employees", json={**valid_employee_payload, "full_name": "High Earner", "salary": 130000.0})
+
+    response = client.get("/api/employees")
+    assert response.status_code == 200
+
+    bands = {item["full_name"]: item["salary_band"] for item in response.json()["items"]}
+    assert bands["Low Earner"] == "below_band"
+    assert bands["Mid Earner"] == "within_band"
+    assert bands["High Earner"] == "above_band"
+
+
+def test_export_employees_csv(client, valid_employee_payload):
+    client.post("/api/employees", json=valid_employee_payload)
+
+    response = client.get("/api/employees/export/csv")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    body = response.text
+    assert "full_name" in body
+    assert valid_employee_payload["full_name"] in body

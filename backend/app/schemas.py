@@ -63,9 +63,54 @@ class EmployeeListResponse(BaseModel):
     page_size: int
 
 
-(BaseModel):
+class JobTitleInsight(BaseModel):
     job_title: str
     avg_salary: float
     headcount: int
     p25_salary: float | None = None
     p75_salary: float | None = None
+
+
+class SalaryDistributionBucket(BaseModel):
+    range_label: str
+    count: int
+
+
+class SalaryDistribution(BaseModel):
+    country: str
+    buckets: list[SalaryDistributionBucket]
+
+
+class TopEarner(BaseModel):
+    full_name: str
+    job_title: str
+    salary: float
+    currency: str
+
+
+class DepartmentSummary(BaseModel):
+    department: str
+    headcount: int
+    avg_salary: float
+
+
+class CountryBreakdown(BaseModel):
+    country: str
+    headcount: int
+    avg_salary: float
+
+
+class CountryInsights(BaseModel):
+    country: str
+    headcount: int
+    min_salary: float
+    max_salary: float
+    avg_salary: float
+    top_job_titles: list[JobTitleInsight]
+
+
+class OrgSummary(BaseModel):
+    total_headcount: int
+    avg_salary: float
+    country_count: int
+    country_breakdown: list[CountryBreakdown]
