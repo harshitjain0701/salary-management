@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "@/api/client";
+import EmployeeForm from "@/components/EmployeeForm";
 import EmployeeTable from "@/components/EmployeeTable";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +37,8 @@ export default function EmployeesPage() {
   const [error, setError] = useState<string | null>(null);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -107,6 +110,16 @@ export default function EmployeesPage() {
           <h2 className="text-2xl font-semibold">Employees</h2>
           <p className="text-sm text-muted-foreground">Manage employee salary records</p>
         </div>
+        <div className="flex flex-wrap gap-2">
+<Button
+            onClick={() => {
+              setEmployeeToEdit(null);
+              setFormOpen(true);
+            }}
+          >
+            Add Employee
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -148,7 +161,11 @@ export default function EmployeesPage() {
       <EmployeeTable
         employees={employees}
         loading={loading}
-onDelete={(employee) => setEmployeeToDelete(employee)}
+        onEdit={(employee) => {
+          setEmployeeToEdit(employee);
+          setFormOpen(true);
+        }}
+        onDelete={(employee) => setEmployeeToDelete(employee)}
       />
 
       <div className="flex items-center justify-between">
@@ -171,6 +188,15 @@ onDelete={(employee) => setEmployeeToDelete(employee)}
           </Button>
         </div>
       </div>
+
+      <EmployeeForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        employee={employeeToEdit}
+        countries={countries}
+        jobTitles={jobTitles}
+        onSuccess={loadEmployees}
+      />
 
       <Dialog open={!!employeeToDelete} onOpenChange={(open) => !open && setEmployeeToDelete(null)}>
         <DialogContent>
