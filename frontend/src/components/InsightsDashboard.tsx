@@ -1,7 +1,10 @@
 import type {
   CountryInsights,
+  DepartmentSummary,
   JobTitleInsight,
   OrgSummary,
+  SalaryDistribution,
+  TopEarner,
 } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,6 +20,9 @@ interface InsightsDashboardProps {
   countryInsights: CountryInsights | null;
   jobTitleInsights: JobTitleInsight[];
   orgSummary: OrgSummary | null;
+  salaryDistribution: SalaryDistribution | null;
+  topEarners: TopEarner[];
+  departmentSummary: DepartmentSummary[];
   loading?: boolean;
 }
 
@@ -53,6 +59,9 @@ export default function InsightsDashboard({
   countryInsights,
   jobTitleInsights,
   orgSummary,
+  salaryDistribution,
+  topEarners,
+  departmentSummary,
   loading,
 }: InsightsDashboardProps) {
   if (loading) {
@@ -128,6 +137,54 @@ export default function InsightsDashboard({
         </section>
       )}
 
+      {salaryDistribution && salaryDistribution.buckets.some((b) => b.count > 0) && (
+        <section className="space-y-4">
+          <h3 className="text-lg font-semibold">Salary Distribution</h3>
+          <Card>
+            <CardContent className="space-y-3 pt-6">
+              {salaryDistribution.buckets.map((bucket) => (
+                <div key={bucket.range_label} className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span>{bucket.range_label}</span>
+                    <span className="text-muted-foreground">{bucket.count} employees</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted">
+                    <div
+                      className="h-2 rounded-full bg-primary"
+                      style={{ width: `${(bucket.count / maxBucketCount) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {topEarners.length > 0 && (
+        <section className="space-y-4">
+          <h3 className="text-lg font-semibold">Top Earners</h3>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Job Title</TableHead>
+                <TableHead>Salary</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {topEarners.map((earner) => (
+                <TableRow key={`${earner.full_name}-${earner.salary}`}>
+                  <TableCell className="font-medium">{earner.full_name}</TableCell>
+                  <TableCell>{earner.job_title}</TableCell>
+                  <TableCell>{formatNumber(earner.salary, earner.currency)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </section>
+      )}
+
       {departmentSummary.length > 0 && (
         <section className="space-y-4">
           <h3 className="text-lg font-semibold">Department Summary</h3>
@@ -163,6 +220,8 @@ export default function InsightsDashboard({
                 <TableHead>Job Title</TableHead>
                 <TableHead>Headcount</TableHead>
                 <TableHead>Average Salary</TableHead>
+                <TableHead>P25</TableHead>
+                <TableHead>P75</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -171,6 +230,12 @@ export default function InsightsDashboard({
                   <TableCell>{item.job_title}</TableCell>
                   <TableCell>{item.headcount}</TableCell>
                   <TableCell>{formatNumber(item.avg_salary, currency)}</TableCell>
+                  <TableCell>
+                    {item.p25_salary != null ? formatNumber(item.p25_salary, currency) : "—"}
+                  </TableCell>
+                  <TableCell>
+                    {item.p75_salary != null ? formatNumber(item.p75_salary, currency) : "—"}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

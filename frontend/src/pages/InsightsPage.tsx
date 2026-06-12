@@ -10,8 +10,11 @@ import {
 } from "@/components/ui/select";
 import type {
   CountryInsights,
+  DepartmentSummary,
   JobTitleInsight,
   OrgSummary,
+  SalaryDistribution,
+  TopEarner,
 } from "@/types";
 
 export default function InsightsPage() {
@@ -20,6 +23,9 @@ export default function InsightsPage() {
   const [countryInsights, setCountryInsights] = useState<CountryInsights | null>(null);
   const [jobTitleInsights, setJobTitleInsights] = useState<JobTitleInsight[]>([]);
   const [orgSummary, setOrgSummary] = useState<OrgSummary | null>(null);
+  const [salaryDistribution, setSalaryDistribution] = useState<SalaryDistribution | null>(null);
+  const [topEarners, setTopEarners] = useState<TopEarner[]>([]);
+  const [departmentSummary, setDepartmentSummary] = useState<DepartmentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,14 +46,27 @@ export default function InsightsPage() {
     setLoading(true);
     setError(null);
     try {
-      const [countryData, titleData, summaryData] = await Promise.all([
+      const [
+        countryData,
+        titleData,
+        summaryData,
+        distributionData,
+        topEarnersData,
+        departmentData,
+      ] = await Promise.all([
         api.getCountryInsights(selectedCountry),
         api.getJobTitleInsights(selectedCountry),
         api.getOrgSummary(),
+        api.getSalaryDistribution(selectedCountry),
+        api.getTopEarners(selectedCountry, 5),
+        api.getDepartmentSummary(),
       ]);
       setCountryInsights(countryData);
       setJobTitleInsights(titleData);
       setOrgSummary(summaryData);
+      setSalaryDistribution(distributionData);
+      setTopEarners(topEarnersData);
+      setDepartmentSummary(departmentData);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to load insights");
     } finally {
@@ -96,6 +115,9 @@ export default function InsightsPage() {
         countryInsights={countryInsights}
         jobTitleInsights={jobTitleInsights}
         orgSummary={orgSummary}
+        salaryDistribution={salaryDistribution}
+        topEarners={topEarners}
+        departmentSummary={departmentSummary}
         loading={loading}
       />
     </div>

@@ -111,7 +111,19 @@ export default function EmployeesPage() {
           <p className="text-sm text-muted-foreground">Manage employee salary records</p>
         </div>
         <div className="flex flex-wrap gap-2">
-<Button
+          <Button
+            variant="outline"
+            onClick={() =>
+              api.exportEmployeesCsv({
+                country: country || undefined,
+                job_title: jobTitle || undefined,
+                search: debouncedSearch || undefined,
+              })
+            }
+          >
+            Export CSV
+          </Button>
+          <Button
             onClick={() => {
               setEmployeeToEdit(null);
               setFormOpen(true);
@@ -120,6 +132,13 @@ export default function EmployeesPage() {
             Add Employee
           </Button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+        <span className="rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-amber-800">Below band</span>
+        <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-emerald-800">Within band</span>
+        <span className="rounded-full border border-sky-200 bg-sky-100 px-2 py-0.5 text-sky-800">Above band</span>
+        <span>— compared to p25/p75 for same country & job title</span>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
