@@ -61,3 +61,11 @@ class EmployeeListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+(BaseModel):
+    job_title: str
+    avg_salary: float
+    headcount: int
+    p25_salary: float | None = None
+    p75_salary: float | None = None
