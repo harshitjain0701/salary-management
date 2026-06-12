@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "@/api/client";
-import EmployeeForm from "@/components/EmployeeForm";
 import EmployeeTable from "@/components/EmployeeTable";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,8 +36,6 @@ export default function EmployeesPage() {
   const [error, setError] = useState<string | null>(null);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
-  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -110,35 +107,6 @@ export default function EmployeesPage() {
           <h2 className="text-2xl font-semibold">Employees</h2>
           <p className="text-sm text-muted-foreground">Manage employee salary records</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={() =>
-              api.exportEmployeesCsv({
-                country: country || undefined,
-                job_title: jobTitle || undefined,
-                search: debouncedSearch || undefined,
-              })
-            }
-          >
-            Export CSV
-          </Button>
-          <Button
-            onClick={() => {
-              setEmployeeToEdit(null);
-              setFormOpen(true);
-            }}
-          >
-            Add Employee
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-        <span className="rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-amber-800">Below band</span>
-        <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-emerald-800">Within band</span>
-        <span className="rounded-full border border-sky-200 bg-sky-100 px-2 py-0.5 text-sky-800">Above band</span>
-        <span>— compared to p25/p75 for same country & job title</span>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -180,11 +148,7 @@ export default function EmployeesPage() {
       <EmployeeTable
         employees={employees}
         loading={loading}
-        onEdit={(employee) => {
-          setEmployeeToEdit(employee);
-          setFormOpen(true);
-        }}
-        onDelete={(employee) => setEmployeeToDelete(employee)}
+onDelete={(employee) => setEmployeeToDelete(employee)}
       />
 
       <div className="flex items-center justify-between">
@@ -207,15 +171,6 @@ export default function EmployeesPage() {
           </Button>
         </div>
       </div>
-
-      <EmployeeForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        employee={employeeToEdit}
-        countries={countries}
-        jobTitles={jobTitles}
-        onSuccess={loadEmployees}
-      />
 
       <Dialog open={!!employeeToDelete} onOpenChange={(open) => !open && setEmployeeToDelete(null)}>
         <DialogContent>

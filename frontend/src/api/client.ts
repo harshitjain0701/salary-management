@@ -102,24 +102,7 @@ export const api = {
 
   getOrgSummary(): Promise<OrgSummary> {
     return request("/api/insights/summary");
-  },
-
-  getSalaryDistribution(country: string): Promise<SalaryDistribution> {
-    return request(`/api/insights/salary-distribution/${encodeURIComponent(country)}`);
-  },
-
-  getTopEarners(country?: string, limit = 5): Promise<TopEarner[]> {
-    return request(`/api/insights/top-earners${buildQuery({ country, limit })}`);
-  },
-
-  getDepartmentSummary(): Promise<DepartmentSummary[]> {
-    return request("/api/insights/department-summary");
-  },
-
-  exportEmployeesCsv(params: EmployeeQueryParams = {}): void {
-    const url = `${API_BASE_URL}/api/employees/export/csv${buildQuery(params)}`;
-    window.open(url, "_blank");
-  },
+  }
 };
 
 export { ApiError };

@@ -1,5 +1,5 @@
 import { Pencil, Trash2 } from "lucide-react";
-import type { Employee, SalaryBand } from "@/types";
+import type { Employee } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
 
 interface EmployeeTableProps {
   employees: Employee[];
@@ -24,28 +23,6 @@ function formatSalary(salary: number, currency: string): string {
     currency,
     maximumFractionDigits: 0,
   }).format(salary);
-}
-
-const bandStyles: Record<SalaryBand, string> = {
-  below_band: "bg-amber-100 text-amber-800 border-amber-200",
-  within_band: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  above_band: "bg-sky-100 text-sky-800 border-sky-200",
-};
-
-const bandLabels: Record<SalaryBand, string> = {
-  below_band: "Below band",
-  within_band: "Within band",
-  above_band: "Above band",
-};
-
-function SalaryBandBadge({ band }: { band?: SalaryBand }) {
-  if (!band) return null;
-
-  return (
-    <span className={cn("inline-flex rounded-full border px-2 py-0.5 text-xs font-medium", bandStyles[band])}>
-      {bandLabels[band]}
-    </span>
-  );
 }
 
 export default function EmployeeTable({ employees, loading, onEdit, onDelete }: EmployeeTableProps) {
@@ -66,7 +43,6 @@ export default function EmployeeTable({ employees, loading, onEdit, onDelete }: 
           <TableHead>Department</TableHead>
           <TableHead>Country</TableHead>
           <TableHead>Salary</TableHead>
-          <TableHead>Band</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -78,9 +54,6 @@ export default function EmployeeTable({ employees, loading, onEdit, onDelete }: 
             <TableCell>{employee.department}</TableCell>
             <TableCell>{employee.country}</TableCell>
             <TableCell>{formatSalary(employee.salary, employee.currency)}</TableCell>
-            <TableCell>
-              <SalaryBandBadge band={employee.salary_band} />
-            </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">
                 {onEdit && (
@@ -89,12 +62,7 @@ export default function EmployeeTable({ employees, loading, onEdit, onDelete }: 
                   </Button>
                 )}
                 {onDelete && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(employee)}
-                    aria-label="Delete employee"
-                  >
+                  <Button variant="ghost" size="icon" onClick={() => onDelete(employee)} aria-label="Delete employee">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 )}
@@ -106,5 +74,3 @@ export default function EmployeeTable({ employees, loading, onEdit, onDelete }: 
     </Table>
   );
 }
-
-export { SalaryBandBadge, bandLabels };
